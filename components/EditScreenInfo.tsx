@@ -1,12 +1,47 @@
-import React from 'react';
-import { StyleSheet } from 'react-native';
-
+import React, {useEffect, useState} from 'react';
+import { StyleSheet, TextInput, Button } from 'react-native';
 import Colors from '../constants/Colors';
-import { ExternalLink } from './ExternalLink';
-import { MonoText } from './StyledText';
 import { Text, View } from './Themed';
+import { useRut } from 'react-rut-formatter';
 
 export default function EditScreenInfo({ path }: { path: string }) {
+ //formatiar rut a continuacion
+
+
+
+
+  const [rut2, setRut2] = useState("");
+  const [data, setData] = useState({
+    name: "",
+    rut: "",
+    activities: [
+      {
+        name: "",
+        date: "",
+      } 
+    ]
+  });
+
+  const handleChange = async (e:any) => {
+
+    setRut2(e);
+    
+  }
+  const postPetition = async () => {
+    console.log(rut2);
+   setData({name: "", rut: "", activities: [{name: "", date: ""}]});
+    fetch(`https://api.libreapi.cl/rut/activities?rut=${rut2}`, {
+      method: 'GET',
+      redirect: 'follow'
+    })
+      .then(response => response.json())
+      .then(result => setData(result.data))
+      .catch(error => setData({name: "", rut: "", activities: [{name: "", date: ""}]}));
+  }
+  useEffect(() => {
+    console.log(data);
+  }, [data]);
+
   return (
     <View>
       <View style={styles.getStartedContainer}>
@@ -14,33 +49,41 @@ export default function EditScreenInfo({ path }: { path: string }) {
           style={styles.getStartedText}
           lightColor="rgba(0,0,0,0.8)"
           darkColor="rgba(255,255,255,0.8)">
-          Open up the code for this screen:
-        </Text>
-
-        <View
-          style={[styles.codeHighlightContainer, styles.homeScreenFilename]}
-          darkColor="rgba(255,255,255,0.05)"
-          lightColor="rgba(0,0,0,0.05)">
-          <MonoText>{path}</MonoText>
-        </View>
-
-        <Text
-          style={styles.getStartedText}
-          lightColor="rgba(0,0,0,0.8)"
-          darkColor="rgba(255,255,255,0.8)">
-          Change any of the text, save the file, and your app will automatically update.
+          Consulta {path}
         </Text>
       </View>
-
-      <View style={styles.helpContainer}>
-        <ExternalLink
-          style={styles.helpLink}
-          href="https://docs.expo.io/get-started/create-a-new-app/#opening-the-app-on-your-phonetablet">
-          <Text style={styles.helpLinkText} lightColor={Colors.light.tint}>
-            Tap here if your app doesn't automatically update after making changes
-          </Text>
-        </ExternalLink>
+      <View style={styles.textInput}>
+        <TextInput
+          style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
+          onChangeText={handleChange}
+          value={rut2}
+        />
       </View>
+      <View >
+        <Button
+          title="Consultar"
+          color={'#841584'}
+          onPress={postPetition}
+        />
+
+      </View>
+      {data.name ? <View style={styles.helpContainer}>
+        <Text style={styles.helpLinkText} lightColor={Colors.light.tint}>
+          {"Nombre: " +data?.name}
+        </Text>
+        <Text style={styles.helpLinkText} lightColor={Colors.light.tint}>
+          {"RUT: " +data?.rut}
+        </Text>
+        {data?.activities.map((activity, index) => (
+          <><Text style={styles.helpLinkText} lightColor={Colors.light.tint}>
+            {"Actividad "+ (index+1) +": " +activity?.name}
+          </Text><Text style={styles.helpLinkText} lightColor={Colors.light.tint}>
+              {"Fecha de solicitud "+ (index+1) +": "+activity?.date.split("T")[0]}
+            </Text></>
+        ))}
+      </View> : ""}
+
+
     </View>
   );
 }
@@ -48,7 +91,7 @@ export default function EditScreenInfo({ path }: { path: string }) {
 const styles = StyleSheet.create({
   getStartedContainer: {
     alignItems: 'center',
-    marginHorizontal: 50,
+    marginHorizontal: 10,
   },
   homeScreenFilename: {
     marginVertical: 7,
@@ -65,12 +108,30 @@ const styles = StyleSheet.create({
   helpContainer: {
     marginTop: 15,
     marginHorizontal: 20,
-    alignItems: 'center',
+    // alinear a la izquierda
+    alignItems: 'flex-start',
   },
   helpLink: {
     paddingVertical: 15,
   },
   helpLinkText: {
-    textAlign: 'center',
+    textAlign: 'left',
   },
+  textInput: {
+    backgroundColor: 'lightgray',
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    whith: 100,
+    margin: 10
+  },
+  textInput2: {
+    color: '#000000',
+    backgroundColor: 'green',
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    whith: 100,
+    margin: 10
+  }
 });
